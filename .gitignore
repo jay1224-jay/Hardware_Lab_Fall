@@ -1,0 +1,4 @@
+sim
+*.vcd
+*.out
+*.DS_store

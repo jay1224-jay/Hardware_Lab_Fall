@@ -1,0 +1,246 @@
+#! /opt/homebrew/Cellar/icarus-verilog/13.0/bin/vvp
+:ivl_version "13.0 (stable)" "(v13_0)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 10;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/va_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/13.0/lib/ivl/v2009.vpi";
+S_0x1003b9e70 .scope package, "$unit" "$unit" 2 1;
+ .timescale 0 0;
+S_0x1003b9ff0 .scope module, "practice_2_t" "practice_2_t" 3 3;
+ .timescale -9 -10;
+P_0xa2ac04180 .param/l "LEN" 0 3 25, +C4<00000000000000000000000000001001>;
+v0xa2a4501e0_0 .var "D", 0 0;
+v0xa2a450280_0 .var "D_pattern", 8 0;
+v0xa2a450320_0 .var "G", 0 0;
+v0xa2a4503c0_0 .var "G_pattern", 8 0;
+v0xa2a450460_0 .net "P", 0 0, L_0x1003c46d0;  1 drivers
+v0xa2a450500_0 .net "Pn", 0 0, L_0x1003c4740;  1 drivers
+v0xa2a4505a0_0 .var/i "error_count", 31 0;
+v0xa2a450640_0 .net "expected_P", 0 0, v0x1003be480_0;  1 drivers
+v0xa2a4506e0_0 .net "expected_Pn", 0 0, L_0x1003c47b0;  1 drivers
+v0xa2a450780_0 .var "golden_Pns", 8 0;
+v0xa2a450820_0 .var "golden_Ps", 8 0;
+v0xa2a4508c0_0 .var/i "i", 31 0;
+v0xa2a450960_0 .var "student_Pns", 8 0;
+v0xa2a450a00_0 .var "student_Ps", 8 0;
+S_0x1003b8050 .scope module, "golden_latch" "golden_2" 3 23, 3 88 0, S_0x1003b9ff0;
+ .timescale -9 -10;
+    .port_info 0 /INPUT 1 "G";
+    .port_info 1 /INPUT 1 "D";
+    .port_info 2 /OUTPUT 1 "P";
+    .port_info 3 /OUTPUT 1 "Pn";
+L_0x1003c47b0 .functor NOT 1, v0x1003be480_0, C4<0>, C4<0>, C4<0>;
+v0x1003b81d0_0 .net "D", 0 0, v0xa2a4501e0_0;  1 drivers
+v0x1003b8270_0 .net "G", 0 0, v0xa2a450320_0;  1 drivers
+v0x1003be480_0 .var "P", 0 0;
+v0x1003be520_0 .net "Pn", 0 0, L_0x1003c47b0;  alias, 1 drivers
+E_0xa2b02cb00 .event anyedge, v0x1003b81d0_0, v0x1003b8270_0;
+S_0x1003be5c0 .scope module, "p2" "practice_2" 3 19, 4 3 0, S_0x1003b9ff0;
+ .timescale -9 -10;
+    .port_info 0 /INPUT 1 "G";
+    .port_info 1 /INPUT 1 "D";
+    .port_info 2 /OUTPUT 1 "P";
+    .port_info 3 /OUTPUT 1 "Pn";
+L_0x1003b8be0 .functor NOT 1, v0xa2a4501e0_0, C4<0>, C4<0>, C4<0>;
+L_0x1003c45f0 .functor NAND 1, v0xa2a450320_0, v0xa2a4501e0_0, C4<1>, C4<1>;
+L_0x1003c4660 .functor NAND 1, L_0x1003b8be0, v0xa2a450320_0, C4<1>, C4<1>;
+L_0x1003c46d0 .functor NAND 1, L_0x1003c45f0, L_0x1003c4740, C4<1>, C4<1>;
+L_0x1003c4740 .functor NAND 1, L_0x1003c4660, L_0x1003c46d0, C4<1>, C4<1>;
+v0x1003c1b10_0 .net "D", 0 0, v0xa2a4501e0_0;  alias, 1 drivers
+v0x1003c1bb0_0 .net "G", 0 0, v0xa2a450320_0;  alias, 1 drivers
+v0x1003c1c50_0 .net "P", 0 0, L_0x1003c46d0;  alias, 1 drivers
+v0x1003c4550_0 .net "Pn", 0 0, L_0x1003c4740;  alias, 1 drivers
+v0xa2a450000_0 .net "nandD", 0 0, L_0x1003c45f0;  1 drivers
+v0xa2a4500a0_0 .net "nandG", 0 0, L_0x1003c4660;  1 drivers
+v0xa2a450140_0 .net "notD", 0 0, L_0x1003b8be0;  1 drivers
+    .scope S_0x1003b8050;
+T_0 ;
+    %wait E_0xa2b02cb00;
+    %load/vec4 v0x1003b8270_0;
+    %flag_set/vec4 8;
+    %jmp/0xz  T_0.0, 8;
+    %load/vec4 v0x1003b81d0_0;
+    %assign/vec4 v0x1003be480_0, 0;
+T_0.0 ;
+    %jmp T_0;
+    .thread T_0, $push;
+    .scope S_0x1003b9ff0;
+T_1 ;
+    %pushi/vec4 204, 0, 9;
+    %store/vec4 v0xa2a4503c0_0, 0, 9;
+    %pushi/vec4 105, 0, 9;
+    %store/vec4 v0xa2a450280_0, 0, 9;
+    %end;
+    .thread T_1, $init;
+    .scope S_0x1003b9ff0;
+T_2 ;
+    %vpi_call/w 3 5 "$dumpfile", "waveform.vcd" {0 0 0};
+    %vpi_call/w 3 6 "$dumpvars", 32'sb00000000000000000000000000000000, S_0x1003b9ff0 {0 0 0};
+    %end;
+    .thread T_2;
+    .scope S_0x1003b9ff0;
+T_3 ;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0xa2a4505a0_0, 0, 32;
+    %pushi/vec4 0, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.0 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.1, 5;
+    %load/vec4 v0xa2a4503c0_0;
+    %load/vec4 v0xa2a4508c0_0;
+    %part/s 1;
+    %store/vec4 v0xa2a450320_0, 0, 1;
+    %load/vec4 v0xa2a450280_0;
+    %load/vec4 v0xa2a4508c0_0;
+    %part/s 1;
+    %store/vec4 v0xa2a4501e0_0, 0, 1;
+    %delay 10, 0;
+    %load/vec4 v0xa2a450460_0;
+    %ix/getv/s 4, v0xa2a4508c0_0;
+    %store/vec4 v0xa2a450a00_0, 4, 1;
+    %load/vec4 v0xa2a450500_0;
+    %ix/getv/s 4, v0xa2a4508c0_0;
+    %store/vec4 v0xa2a450960_0, 4, 1;
+    %load/vec4 v0xa2a450640_0;
+    %ix/getv/s 4, v0xa2a4508c0_0;
+    %store/vec4 v0xa2a450820_0, 4, 1;
+    %load/vec4 v0xa2a4506e0_0;
+    %ix/getv/s 4, v0xa2a4508c0_0;
+    %store/vec4 v0xa2a450780_0, 4, 1;
+    %load/vec4 v0xa2a450460_0;
+    %load/vec4 v0xa2a450640_0;
+    %cmp/ne;
+    %jmp/0xz  T_3.3, 6;
+    %load/vec4 v0xa2a4505a0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4505a0_0, 0, 32;
+T_3.3 ;
+    %load/vec4 v0xa2a450500_0;
+    %load/vec4 v0xa2a4506e0_0;
+    %cmp/ne;
+    %jmp/0xz  T_3.5, 6;
+    %load/vec4 v0xa2a4505a0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4505a0_0, 0, 32;
+T_3.5 ;
+    %delay 90, 0;
+T_3.2 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.0;
+T_3.1 ; for-loop exit label
+    %load/vec4 v0xa2a4505a0_0;
+    %cmpi/e 0, 0, 32;
+    %jmp/0xz  T_3.7, 6;
+    %vpi_call/w 3 53 "$display", "[SUCCESS]: All tests passed successfully!" {0 0 0};
+    %jmp T_3.8;
+T_3.7 ;
+    %vpi_call/w 3 55 "$display", "[ERROR]: There were %0d errors.", v0xa2a4505a0_0 {0 0 0};
+    %vpi_call/w 3 57 "$write", "     Gate input G: %b", &PV<v0xa2a4503c0_0, 0, 1> {0 0 0};
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.9 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.10, 5;
+    %vpi_call/w 3 58 "$write", " -> %b", &PV<v0xa2a4503c0_0, v0xa2a4508c0_0, 1> {0 0 0};
+T_3.11 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.9;
+T_3.10 ; for-loop exit label
+    %vpi_call/w 3 59 "$write", "\012" {0 0 0};
+    %vpi_call/w 3 61 "$write", "     Data input D: %b", &PV<v0xa2a450280_0, 0, 1> {0 0 0};
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.12 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.13, 5;
+    %vpi_call/w 3 62 "$write", " -> %b", &PV<v0xa2a450280_0, v0xa2a4508c0_0, 1> {0 0 0};
+T_3.14 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.12;
+T_3.13 ; for-loop exit label
+    %vpi_call/w 3 63 "$write", "\012" {0 0 0};
+    %vpi_call/w 3 65 "$write", "    Your output P: %b", &PV<v0xa2a450a00_0, 0, 1> {0 0 0};
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.15 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.16, 5;
+    %vpi_call/w 3 66 "$write", " -> %b", &PV<v0xa2a450a00_0, v0xa2a4508c0_0, 1> {0 0 0};
+T_3.17 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.15;
+T_3.16 ; for-loop exit label
+    %vpi_call/w 3 67 "$write", "\012" {0 0 0};
+    %vpi_call/w 3 69 "$write", "   Your output Pn: %b", &PV<v0xa2a450960_0, 0, 1> {0 0 0};
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.18 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.19, 5;
+    %vpi_call/w 3 70 "$write", " -> %b", &PV<v0xa2a450960_0, v0xa2a4508c0_0, 1> {0 0 0};
+T_3.20 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.18;
+T_3.19 ; for-loop exit label
+    %vpi_call/w 3 71 "$write", "\012" {0 0 0};
+    %vpi_call/w 3 73 "$write", " Correct output P: %b", &PV<v0xa2a450820_0, 0, 1> {0 0 0};
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.21 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.22, 5;
+    %vpi_call/w 3 74 "$write", " -> %b", &PV<v0xa2a450820_0, v0xa2a4508c0_0, 1> {0 0 0};
+T_3.23 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.21;
+T_3.22 ; for-loop exit label
+    %vpi_call/w 3 75 "$write", "\012" {0 0 0};
+    %vpi_call/w 3 77 "$write", "Correct output Pn: %b", &PV<v0xa2a450780_0, 0, 1> {0 0 0};
+    %pushi/vec4 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+T_3.24 ; Top of for-loop
+    %load/vec4 v0xa2a4508c0_0;
+    %cmpi/s 9, 0, 32;
+	  %jmp/0xz T_3.25, 5;
+    %vpi_call/w 3 78 "$write", " -> %b", &PV<v0xa2a450780_0, v0xa2a4508c0_0, 1> {0 0 0};
+T_3.26 ; for-loop step statement
+    %load/vec4 v0xa2a4508c0_0;
+    %addi 1, 0, 32;
+    %store/vec4 v0xa2a4508c0_0, 0, 32;
+    %jmp T_3.24;
+T_3.25 ; for-loop exit label
+    %vpi_call/w 3 79 "$write", "\012" {0 0 0};
+T_3.8 ;
+    %vpi_call/w 3 81 "$finish" {0 0 0};
+    %end;
+    .thread T_3;
+# The file index is used to find the file name in the following table.
+:file_names 5;
+    "N/A";
+    "<interactive>";
+    "-";
+    "practice_2_t.sv";
+    "practice_2.sv";
