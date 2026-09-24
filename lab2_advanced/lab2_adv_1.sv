@@ -167,6 +167,10 @@ module lab2_adv_1 (
         end
         else begin
             out <= low_mask;
+            if ( filtered_data[low_mask] == target ) 
+                exact <= 1;
+            else 
+                exact <= 0;
         end
     end
 
