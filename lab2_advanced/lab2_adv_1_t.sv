@@ -20,6 +20,9 @@ module lab2_adv_1_tb;
     logic [5:0] test_target [0:7];
     int unsigned test_index;
 
+    logic [3:0] expected_result [7];
+    logic [3:0] expected_out;
+
     lab2_adv_1 dut (
         .clk(clk),
         .rst(rst),
@@ -84,6 +87,9 @@ module lab2_adv_1_tb;
         val_4 = 4'd0;
         target = 6'd0;
 
+        
+        expected_result = '{4'b0110, 4'b0000, 4'b0010, 4'b1111, 4'b0011, 4'b0101, 4'b0110};
+
         // The first post-reset input change occurs at the falling edge at
         // 35 ns. Each later set is applied at the next falling edge.
         #35ns;
@@ -98,6 +104,10 @@ module lab2_adv_1_tb;
             #1ns;
             // TODO: Implement your expected-result checks here, after the sampled rising edge.
             // TODO: Also verify that both outputs change only at rising edges.
+            if ( expected_result[test_index] != out ) begin
+                $display("== FAIL == (see below)");
+            end
+            
             if (test_index < 7)
                 @(negedge clk);
         end
@@ -105,7 +115,7 @@ module lab2_adv_1_tb;
 
     always @(posedge clk) begin
         #1ns;
-        $display("t=%0t rst=%b values={%0d,%0d,%0d,%0d} target=%0d out=%b exact=%b",
+        $display("t=%0t rst=%b values={%0d,%0d,%0d,%0d} target=%0d out=%b, exact=%b",
                  $time, rst, val_1, val_2, val_3, val_4, target, out, exact);
     end
 
@@ -113,6 +123,11 @@ module lab2_adv_1_tb;
     initial begin
         #120ns;
         $finish;
+    end
+
+    initial begin
+        $dumpfile("waveform.vcd");
+        $dumpvars(0, lab2_adv_1_tb); // Replace with your top-level module/testbench name
     end
 
 endmodule
