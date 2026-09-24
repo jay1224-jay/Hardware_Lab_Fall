@@ -20,7 +20,7 @@ module lab2_adv_1_tb;
     logic [5:0] test_target [0:7];
     int unsigned test_index;
 
-    logic [3:0] expected_result [7];
+    logic [3:0] expected_result [0:7];
     logic [3:0] expected_out;
 
     lab2_adv_1 dut (
@@ -88,7 +88,7 @@ module lab2_adv_1_tb;
         target = 6'd0;
 
         
-        expected_result = '{4'b0110, 4'b0000, 4'b0010, 4'b1111, 4'b0011, 4'b0101, 4'b0110};
+        expected_result = '{4'b0110, 4'b0000, 4'b0010, 4'b1111, 4'b0011, 4'b0101, 4'b0110, 4'b1010};
 
         // The first post-reset input change occurs at the falling edge at
         // 35 ns. Each later set is applied at the next falling edge.
