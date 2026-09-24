@@ -50,12 +50,12 @@ module subset_sum (
 endmodule
 
 module target_filter(
-    input  logic [3:0] target,
-    input  logic [3:0] sum,
-    output logic [3:0] out
+    input  logic [5:0] target,
+    input  logic [5:0] sum,
+    output logic [5:0] out
 );
 
-    assign out = (sum <= target) ? sum : 4'b0000;
+    assign out = (sum <= target) ? sum : 0;
 
 endmodule
 
@@ -68,7 +68,7 @@ module check_max_among(
     logic [15:0] is_max_array;
     genvar i;
     for ( i = 0 ; i < 16 ; i = i + 1 ) begin
-        assign is_max_array[i] = (filtered_data[index] >= filtered_data[i] && index != i) ? 1 : 0;
+        assign is_max_array[i] = (filtered_data[index] >= filtered_data[i]) ? 1 : 0;
     end
 
     assign is_max = &is_max_array; // and all bits -> 1 bit
@@ -77,7 +77,6 @@ endmodule
 
 module find_max_fit(
     input  logic [5:0] filtered_data [15:0],
-    input  logic [5:0] target,
     output logic [3:0] out // best-fit mask
 );
 
@@ -85,7 +84,7 @@ module find_max_fit(
 
     genvar i;
     for ( i = 0 ; i < 16 ; i = i + 1 )
-        check_max_among my_check(filtered_data, 4'(i), is_max[i]);
+        check_max_among my_check(filtered_data, i, is_max[i]);
 
     always @(*) begin 
         if ( is_max[0] ) begin
@@ -141,25 +140,25 @@ module lab2_adv_1 (
     output logic [3:0] out
 );
 
+    logic [5:0] sub_sum_arr[15:0], filtered_data [15:0];
     
     genvar  i;
     for ( i = 0 ; i < 16 ; i = i + 1 ) begin
         subset_sum my_subset_sum(
-            val_1, val_2, val_3, val_4, 4'(i), sub_sum_arr
+            val_1, val_2, val_3, val_4, 4'(i), sub_sum_arr[i]
         );
     end
-
-    logic [5:0] filtered_data [15:0];
+    integer k;
 
     genvar  j;
     for ( j = 0 ; j < 16 ; j = j + 1 ) begin
         target_filter my_tf(
-            val_1, val_2, val_3, val_4, 4'(i), target
+            target, sub_sum_arr[j], filtered_data[j]
         );
     end
 
     logic [3:0] low_mask;
-    find_max_fit my_find(filtered_data, target, low_mask);
+    find_max_fit my_find(filtered_data, low_mask);
 
     always_ff @( posedge clk ) begin
         if ( rst ) begin 
