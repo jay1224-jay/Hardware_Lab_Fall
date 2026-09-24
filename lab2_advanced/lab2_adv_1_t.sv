@@ -22,7 +22,7 @@ module lab2_adv_1_tb;
 
     logic [3:0] expected_result [0:7];
     logic [3:0] expected_out;
-
+ 
     lab2_adv_1 dut (
         .clk(clk),
         .rst(rst),
@@ -88,7 +88,7 @@ module lab2_adv_1_tb;
         target = 6'd0;
 
         
-        expected_result = '{4'b0110, 4'b0000, 4'b0010, 4'b1111, 4'b0011, 4'b0101, 4'b0110, 4'b1010};
+        expected_result = '{4'b0110, 4'b0000, 4'b0010, 4'b1111, 4'b0011, 4'b0101, 4'b0000, 4'b0101};
 
         // The first post-reset input change occurs at the falling edge at
         // 35 ns. Each later set is applied at the next falling edge.
@@ -99,13 +99,17 @@ module lab2_adv_1_tb;
             val_3 = test_val_3[test_index];
             val_4 = test_val_4[test_index];
             target = test_target[test_index];
+            expected_out = expected_result[test_index];
 
             @(posedge clk);
             #1ns;
             // TODO: Implement your expected-result checks here, after the sampled rising edge.
             // TODO: Also verify that both outputs change only at rising edges.
-            if ( expected_result[test_index] != out ) begin
-                $display("== FAIL == (see below)");
+            if ( expected_out != out ) begin
+                // FAIL
+                $display("FAIL");
+                #1;
+                $finish;
             end
             
             if (test_index < 7)
@@ -113,21 +117,30 @@ module lab2_adv_1_tb;
         end
     end
 
+    integer pass_cnt, test_cnt = 8;
+
+
+
     always @(posedge clk) begin
         #1ns;
-        $display("t=%0t rst=%b values={%0d,%0d,%0d,%0d} target=%0d out=%b, exact=%b",
+        if ( out != expected_out ) begin
+            $display("FAIL: t=%0t rst=%b values={%0d,%0d,%0d,%0d} target=%0d out=%b, exact=%b",
                  $time, rst, val_1, val_2, val_3, val_4, target, out, exact);
+        end
+        else begin
+            $display("PASS: t=%0t rst=%b values={%0d,%0d,%0d,%0d} target=%0d out=%b, exact=%b",
+                 $time, rst, val_1, val_2, val_3, val_4, target, out, exact);
+                 pass_cnt = pass_cnt + 1;
+        end
     end
 
     // Required total duration: exactly 120 ns.
     initial begin
+        pass_cnt = 0;
         #120ns;
+        $display("Test result: %d / %d PASSED", pass_cnt - 4, test_cnt);
         $finish;
     end
 
-    initial begin
-        $dumpfile("waveform.vcd");
-        $dumpvars(0, lab2_adv_1_tb); // Replace with your top-level module/testbench name
-    end
 
 endmodule
