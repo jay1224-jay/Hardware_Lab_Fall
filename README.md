@@ -4,7 +4,7 @@
 
 | Number | Score | Description   | Extra work |
 |--------|-------|--|-|
-| Lab 2  |   | FPGA Implementation of Subset-Sum   | Display ```vals, target, and sum``` on 7-seg display|
+| Lab 2  |   | FPGA Implementation of Subset-Sum   | - |
 
 ## Basic Lab
 
