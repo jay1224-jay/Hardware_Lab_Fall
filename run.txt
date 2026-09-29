@@ -1,0 +1,11 @@
+# Add waveform
+initial begin
+    $dumpfile("waveform.vcd");
+    $dumpvars(0, testbench_name); // Replace with your top-level module/testbench name
+end
+
+# Run simulation with Iverilog
+// -g2012 for enabling SystemVerilog
+
+iverilog -g2012 -o sim src1.sv src2.sv ...
+vvp sim

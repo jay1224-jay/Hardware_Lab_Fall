@@ -138,7 +138,7 @@ module lab2_adv_1_tb;
     initial begin
         pass_cnt = 0;
         #120ns;
-        $display("Test result: %d / %d PASSED", pass_cnt - 4, test_cnt);
+        $display("Test result: %d / %d PASSED", pass_cnt - 3, test_cnt);
         $finish;
     end
 
