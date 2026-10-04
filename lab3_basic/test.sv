@@ -35,17 +35,19 @@ module LOAD_led (
 );
 
     logic [15:0] next_led;
+    logic [4:0]  cnt;
 
     always_ff @( posedge clk, posedge rst ) begin
         if ( rst || state != 2'b01 ) begin
             led_out <= 0;
+            cnt <= 0;
         end
-        else begin
+        else if ( enable ) begin
             led_out <= next_led;
-            end_load <= &led_out;
+            cnt <= cnt + 1;
         end
     end
-
+    assign end_load = (cnt == 16);
     assign next_led = (enable) ? (led_out << 1) + 1'b1 : led_out;
 
 endmodule
@@ -105,21 +107,22 @@ module FINAl_led (
     output logic [15:0] led_out
 );
 
-    logic [1:0] flash_cnt;
+    logic [2:0] flash_cnt;
 
     always_ff @( posedge clk, posedge rst ) begin
         if ( rst || state != 2'b11 ) begin
             end_final <= 0;
             led_out <= 0;
             flash_cnt <= 0;
-        end else if ( enable ) begin
+        end else if ( flash_cnt == 6 ) 
+            end_final <= 1;
+        else if ( enable ) begin
             if ( led_out[0] == 0 ) begin
                 led_out <= {16{1'b1}};
             end else begin
                 led_out <= 0;
-                if ( flash_cnt == )
-                flash_cnt <= flash_cnt + 1'b1;
             end
+            flash_cnt <= flash_cnt + 1;
         end
     end
 
@@ -140,7 +143,7 @@ module lab3_practice (
 
     // States
     logic [1:0] state, next_state;
-    logic end_load;
+    logic end_load, end_final;
     parameter INIT  = 2'b00;
     parameter LOAD  = 2'b01;
     parameter PLAY  = 2'b10;
@@ -152,8 +155,8 @@ module lab3_practice (
 
     assign p25_enable = (state == LOAD);
     assign p5_enable  = (state == FINAL);        
-    timer #(.COUNT(25_000_000)) p25_timer (.clk(clk), .rst(rst), .enable(p25_enable), .tick(p25_clk));
-    timer #(.COUNT(50_000_000)) p5_timer  (.clk(clk), .rst(rst), .enable(p5_enable), .tick(p5_clk));
+    timer #(.COUNT(5)) p25_timer (.clk(clk), .rst(rst), .enable(p25_enable), .tick(p25_clk));
+    timer #(.COUNT(10)) p5_timer  (.clk(clk), .rst(rst), .enable(p5_enable), .tick(p5_clk));
 
     // Div clock
     logic div_28_clk, div_27_clk;
