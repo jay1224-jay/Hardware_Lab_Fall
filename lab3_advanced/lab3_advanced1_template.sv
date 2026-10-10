@@ -1,17 +1,20 @@
 `timescale 1ns / 1ps
 
 module seg_display (
-    input  logic slow_clk,
-    input  logic p5_clk,
+    input  logic clk,
     input  logic rst,
     input  logic [1:0] state,
     input  logic [3:0] display_numbers[3:0],
     output logic [7:0] DISPLAY,
-    output logic [3:0] digit
+    output logic [3:0] masked_digit
 );
 
-    logic [3:0] value, mask;
-    logic toggle;
+    logic [3:0] value, mask, digit;
+    logic toggle, slow_clk;
+    logic p5_enable;
+
+    clock_divider #(.n(15)) display_clk(clk, rst, 1, slow_clk);
+    timer #(.n(50_000_000)) my_timer(clk, rst, state == 2'b01 || state == 2'b10, p5_enable);
     
     always_comb begin
         if (state == 2'b01)
@@ -29,10 +32,10 @@ module seg_display (
     end
     
 
-    always_ff @( posedge slow_clk, posedge rst ) begin
+    always_ff @( posedge clk, posedge rst ) begin
         if ( rst )
             toggle <= 0;
-        else if ( p5_clk )
+        else if ( p5_enable )
             toggle <= ~toggle;
     end
 
@@ -40,26 +43,32 @@ module seg_display (
         if ( rst || state == 2'b00 ) begin
             value <= 4'd7;
             digit <= 4'b0000;
+            masked_digit <= 4'b0000;
         end else begin
             case (digit)
                 4'b1110: begin
                     value <= display_numbers[1];
+                    masked_digit <= 4'b1101 | mask;
                     digit <= 4'b1101;
                 end
                 4'b1101: begin
                     value <= display_numbers[2];
-                    digit <= 4'b1011;         
+                    masked_digit <= 4'b1011 | mask;
+                    digit <= 4'b1011;        
                 end
                 4'b1011: begin
                     value <= display_numbers[3];
+                    masked_digit <= 4'b0111 | mask;
                     digit <= 4'b0111;
                 end
                 4'b0111: begin
                     value <= display_numbers[0];
+                    masked_digit <= 4'b1110 | mask;
                     digit <= 4'b1110;
                 end
                 default: begin
                     value <= 0;
+                    masked_digit <= 4'b1110;
                     digit <= 4'b1110;
                 end
             endcase
@@ -102,18 +111,15 @@ module lab3_advanced_1 (
 
     logic [1:0] state, next_state;
     logic [3:0] display_numbers [3:0];
-    logic slow_clk, p5_enable;
+    logic p5_enable;
 
     logic [7:0] num1, num2;
-    logic [8:0] sum;
+    logic [9:0] sum;
 
     logic debounced_set, one_pulse_set;
 
-    clock_divider #(.n(15)) display_clk(clk, rst, 1, slow_clk);
     debounce my_deb(clk, set, debounced_set);
-    one_pulse my_one(clk, rst, debounced_set, one_pulse_set);
-    
-    timer #(.n(50_000_000)) my_timer(clk, rst, state == SET1 || state == SET2, p5_enable);
+    one_pulse my_one(clk, debounced_set, one_pulse_set);
 
     always_ff @( posedge clk, posedge rst ) begin
         if (rst) state <= INIT;
@@ -168,19 +174,19 @@ module lab3_advanced_1 (
                     display_numbers[1] <= 0;
                     display_numbers[2] <= number[3:0];
                     display_numbers[3] <= number[7:4];
-                    num1 <= number[7:4] * 10 + number[3:0];
+                    num1 <= {4'b0000, number[7:4]} * 8'd10 + number[3:0];
                 end 
                 SET2: begin
                     display_numbers[0] <= number[3:0];
                     display_numbers[1] <= number[7:4];
                     display_numbers[2] <= num1 % 10;
                     display_numbers[3] <= num1 / 10;
-                    num2 <= number[7:4] * 10 + number[3:0];
+                    num2 <= {4'b0000, number[7:4]} * 8'd10 + number[3:0];
                 end 
                 RESULT: begin
                     display_numbers[0] <= sum % 10;
-                    display_numbers[1] <= (sum % 100) / 10;
-                    display_numbers[2] <= sum / 100;
+                    display_numbers[1] <= (sum / 10) % 10;
+                    display_numbers[2] <= (sum / 100) % 10;
                     display_numbers[3] <= 0;
                 end 
                 default: begin
@@ -193,7 +199,7 @@ module lab3_advanced_1 (
         end
     end
 
-    seg_display my_seg(slow_clk, p5_enable, rst, state, display_numbers, DISPLAY, DIGIT);
+    seg_display my_seg(clk, rst, state, display_numbers, DISPLAY, DIGIT);
 
 endmodule
 
@@ -266,7 +272,6 @@ endmodule
 
 module one_pulse (
     input  logic clk,
-    input  logic rst,
     input  logic pb_debounced,
     output logic pb_1_pusle
 );
