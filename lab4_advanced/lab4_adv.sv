@@ -61,21 +61,13 @@ module lab4_adv (
     logic [511:0] key_down;
     logic [8:0]   last_change;
     logic         key_valid;
-    logic single_key_valid;
-    logic next_single_key_valid;
-    key_pressed_t key_presseed;
-
-    // Ensure only one key press at a time
-    always_ff @(posedge clk or posedge rst) 
-        single_key_valid <= rst ? 1'b1 : next_single_key_valid;
-    assign next_single_key_valid = 
-        single_key_valid ? !(key_valid && key_down[last_change]) : 
-                            (key_valid && key_down == 512'b0);
+    logic         key_press_event;
+    key_pressed_t key_pressed;
 
     KeyboardDecoder key_de (
 		.key_down(key_down),
 		.last_change(last_change),
-		.key_valid(single_key_valid),
+		.key_valid(key_valid),
 		.PS2_DATA(PS2_DATA),
 		.PS2_CLK(PS2_CLK),
 		.rst(rst),
@@ -89,14 +81,15 @@ module lab4_adv (
             9'h16B : key_pressed = key_LEFT;
             9'h174 : key_pressed = key_RIGHT;
 
-            9'h01D : key_presseed = key_W;
-            9'h01B : key_presseed = key_S;
-            9'h05A : key_presseed = key_ENTER;
-            9'h029 : key_presseed = key_SPACE;
+            9'h01D : key_pressed = key_W;
+            9'h01B : key_pressed = key_S;
+            9'h05A : key_pressed = key_ENTER;
+            9'h029 : key_pressed = key_SPACE;
             
-			default : key_presseed = {9{1'b1}};
+			default : key_pressed = key_W;
 		endcase
 	end
+    assign key_press_event = key_valid && key_down[last_change];
                         
     // ========= Keyboard Input ===========
 
@@ -107,6 +100,9 @@ module lab4_adv (
     end
 
     logic [25:0] clk_cnt;
+    logic game_step;
+    assign game_step = &clk_cnt;
+
     always_ff @(posedge clk or posedge rst) begin
         if (rst) clk_cnt <= 26'd0;
         else
@@ -160,8 +156,8 @@ module lab4_adv (
 
     logic [1:0] input_direction; // 00:Up, 01:Right, 10:Down, 11:Left
     always_comb begin
-        if (single_key_valid && (key_presseed == key_UP || key_presseed == key_DOWN || key_presseed == key_LEFT || key_presseed == key_RIGHT)) begin
-            case (key_presseed)
+        if (key_press_event && (key_pressed == key_UP || key_pressed == key_DOWN || key_pressed == key_LEFT || key_pressed == key_RIGHT)) begin
+            case (key_pressed)
                 key_UP:    input_direction = 2'b00;
                 key_RIGHT: input_direction = 2'b01;
                 key_DOWN:  input_direction = 2'b10;
@@ -173,20 +169,23 @@ module lab4_adv (
         end
     end
 
+    logic [6:0] snake_body_display [0:3];
+
     snake_7seg_graph_core gg(
         .clk(clk),
         .rst(rst),
-        .start_game(key_presseed == key_ENTER), // Enter
-        .restart(key_presseed == key_SPACE),     // Space
-        .step(clk_cnt[25]),             // 1 step per 2^26 clk cycles
+        .start_game(key_press_event && key_pressed == key_ENTER),
+        .restart(key_press_event && key_pressed == key_SPACE),
+        .step(game_step),
         .lfsr_candidate(lfsr), // 5-bit LFSR
-        .dir_input_valid(single_key_valid && (key_presseed == key_UP || key_presseed == key_DOWN || key_presseed == key_LEFT || key_presseed == key_RIGHT)),
+        .dir_input_valid(key_press_event && (key_pressed == key_UP || key_pressed == key_DOWN || key_pressed == key_LEFT || key_pressed == key_RIGHT)),
         .input_direction(input_direction),
         .score(score),
         .meat_active(meat_active),
         .meat_node(meat_node),
         .ate_meat(ate_meat),
-        .game_state(game_state)
+        .game_state(game_state),
+        .DISPLAY(snake_body_display)
     );
 
     logic [1:0]  disp_mux_sel; // display digit selector
@@ -194,8 +193,8 @@ module lab4_adv (
 
     assign DIGIT = ~(4'b1 << (2'd3 - disp_mux_sel));
 
-    // TODO: assign DISPLAY
     always_comb begin
+        DISPLAY = 7'b1111111;
         case (game_state)
             S_INITIAL: begin // Display __00
                 case(DIGIT)
@@ -205,8 +204,35 @@ module lab4_adv (
                 endcase
             end
             S_PLAY: begin // PLAY: display_grid + meat blink
+                case (DIGIT)
+                    4'b1110: DISPLAY = snake_body_display[3];
+                    4'b1101: DISPLAY = snake_body_display[2];
+                    4'b1011: DISPLAY = snake_body_display[1];
+                    4'b0111: DISPLAY = snake_body_display[0];
+                    default: DISPLAY = 7'b1111111;
+                endcase
+                case (DIGIT)
+                    4'b1110: begin
+                        if (meat_active && meat_blink_on && meat_node[4:3] == 3)
+                            DISPLAY &= ~(7'b0000001 << (3'd6 - meat_node[2:0]));
+                    end
+                    4'b1101: begin
+                        if (meat_active && meat_blink_on && meat_node[4:3] == 2)
+                            DISPLAY &= ~(7'b0000001 << (3'd6 - meat_node[2:0]));
+                    end
+                    4'b1011: begin
+                        if (meat_active && meat_blink_on && meat_node[4:3] == 1)
+                            DISPLAY &= ~(7'b0000001 << (3'd6 - meat_node[2:0]));
+                    end
+                    4'b0111: begin
+                        if (meat_active && meat_blink_on && meat_node[4:3] == 0)
+                            DISPLAY &= ~(7'b0000001 << (3'd6 - meat_node[2:0]));
+                    end
+                    default: DISPLAY &= 7'b1111111;
+                endcase
             end
             S_FINAL: begin
+                DISPLAY = 7'b0110110;
             end
             default: ;
         endcase
@@ -230,7 +256,7 @@ module snake_7seg_graph_core (
     output logic [4:0]  meat_node, // [4:3] = digit, [2:0] = segment
     output logic        ate_meat,
     output state_t      game_state,
-    output // TODO: data for 7-segment display
+    output logic [6:0]  DISPLAY [0:3]
 );
 
     state_t state;
@@ -265,19 +291,50 @@ module snake_7seg_graph_core (
     // Snake Body (FIFO)
     logic [4:0] snake_body [0:31]; // Queue
     logic [4:0] head_ptr, tail_ptr;
+    logic [4:0] snake_length;
+
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            curr_digit <= 2'd2;
+            curr_seg   <= 3'd3;
+            direction  <= 2'b01;
+        end else if (state == S_INITIAL) begin
+            curr_digit <= 2'd2;
+            curr_seg   <= 3'd3;
+            direction  <= 2'b01;
+        end else if (state == S_PLAY && step && !dead) begin
+            curr_digit <= next_digit;
+            curr_seg   <= next_seg;
+            direction  <= next_direction;
+        end
+    end
 
     logic eating_meat;
 
-    // Collision Detection 
+    logic meat_candidate_occupied;
+    integer candidate_index;
+    always_comb begin
+        meat_candidate_occupied = 1'b0;
+        for (candidate_index = 0; candidate_index < 32; candidate_index = candidate_index + 1) begin
+            if (candidate_index < snake_length &&
+                snake_body[(tail_ptr + candidate_index) % 32] == lfsr_candidate)
+                meat_candidate_occupied = 1'b1;
+        end
+    end
+
     logic dead;
+    integer collision_index;
     always_comb begin
         dead = 1'b0;
         if (state == S_PLAY) begin
-            // 1. Self-bite: next node occupied by snake body
-            //    Exception: tail will be popped this step AND next_node is the tail
-            if (snake_body[head_ptr])
-            // 2. Dead-end
-            if (next_seg == -1) dead = 1'b1;
+            if (next_seg == 3'd7)
+                dead = 1'b1;
+            for (collision_index = 0; collision_index < 32; collision_index = collision_index + 1) begin
+                if (collision_index < snake_length &&
+                    (eating_meat || collision_index != 0) &&
+                    snake_body[(tail_ptr + collision_index) % 32] == {next_digit, next_seg})
+                    dead = 1'b1;
+            end
         end
     end
 
@@ -306,9 +363,13 @@ module snake_7seg_graph_core (
             3'd3: begin // 'd' – top horizontal
                 case ({action_valid, action})
                     3'b100: begin // Up
-                        next_seg       = direction[1] ? 3'd4 : 3'd2; 
+                        next_seg       = direction[1] ? 3'd5 : 3'd1;
                         next_direction = action;
-                    end 
+                    end
+                    3'b110: begin // Down
+                        next_seg       = direction[1] ? 3'd4 : 3'd2;
+                        next_direction = action;
+                    end
                     default: begin // straight (continue left/right)
                         next_digit = direction[1] ? curr_digit - 2'd1 : curr_digit + 2'd1;
                         next_seg   = 3'd3;
@@ -346,7 +407,7 @@ module snake_7seg_graph_core (
                         next_direction = action;
                     end
                     default: begin // straight (Up/Down)
-                        next_seg = direction[1] ? 3'd2 : -1/*TODO: dead end*/; // Down→c, Up→dead-end
+                        next_seg = direction[1] ? 3'd2 : 3'd0;
                     end
                 endcase
             end
@@ -362,7 +423,7 @@ module snake_7seg_graph_core (
                         next_direction = action;
                     end
                     default: begin // straight (Up/Down)
-                        next_seg = direction[1] ? -1 : 3'd1; // Down→c, Up→dead-end
+                        next_seg = direction[1] ? 3'd7 : 3'd1;
                     end
                 endcase
             end
@@ -378,7 +439,7 @@ module snake_7seg_graph_core (
                         next_direction = action;
                     end
                     default: begin // straight (Up/Down)
-                        next_seg = direction[1] ? -1 : 3'd5; // Down→c, Up→dead-end
+                        next_seg = direction[1] ? 3'd7 : 3'd5;
                     end
                 endcase
             end
@@ -394,7 +455,7 @@ module snake_7seg_graph_core (
                         next_direction = action;
                     end
                     default: begin // straight (Up/Down)
-                        next_seg = direction[1] ? 3'd4 : -1/*TODO: dead end*/; // Down→c, Up→dead-end
+                        next_seg = direction[1] ? 3'd4 : 3'd0;
                     end
                 endcase
             end
@@ -402,43 +463,45 @@ module snake_7seg_graph_core (
         endcase
     end
 
-    logic meat_node_occupied;
-    logic [4:0] snake_length;
-
     assign snake_length = (head_ptr >= tail_ptr) ? 
-                          head_ptr - tail_ptr + 1: 
-                          32 - (tail_ptr - head_ptr - 1);
-    integer index;
-    always_comb begin
-        meat_node_occupied = 1'b0;
-        for (index = 0; index < 32; index = index + 1) begin
-            if (snake_body[(tail_ptr + index) % 32] == meat_node && index < snake_length) 
-            begin
-                meat_node_occupied = 1'b1;
-            end
-        end
-    end
+                          head_ptr - tail_ptr + 1'b1:
+                          6'd32 - tail_ptr + head_ptr + 1'b1;
 
-    assign eating_meat = meat_node_occupied && meat_active && (next_digit == meat_node[4:3]) && (next_seg == meat_node[2:0]);
+    assign eating_meat = meat_active && (next_digit == meat_node[4:3]) && (next_seg == meat_node[2:0]);
 
     // Main FSM & snake_body / Grid / Meat Update
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             state <= S_INITIAL;
+            score <= 5'd0;
+            meat_active <= 1'b0;
+            ate_meat <= 1'b0;
+            head_ptr <= 5'd2;
+            tail_ptr <= 5'd0;
+            snake_body[0] <= {2'd0, 3'd3};
+            snake_body[1] <= {2'd1, 3'd3};
+            snake_body[2] <= {2'd2, 3'd3};
         end else begin
             ate_meat <= 1'b0; // default: clear pulse
 
             case (state)
                 S_INITIAL: begin
                     if (start_game) state <= S_PLAY;
+                    score <= 5'd0;
+                    meat_active <= 1'b0;
+                    snake_body[0] <= {2'd0, 3'd3};
+                    snake_body[1] <= {2'd1, 3'd3};
+                    snake_body[2] <= {2'd2, 3'd3};
+                    head_ptr <= 5'd2;
+                    tail_ptr <= 5'd0;
                 end
 
                 S_PLAY: begin
                     // --- Meat spawning (every clk) ---
-                    if (!meat_active) begin
+                    if (!meat_active && lfsr_candidate[2:0] != 3'd7 &&
+                        !meat_candidate_occupied) begin
                         meat_node   <= lfsr_candidate;
-                        if (!meat_node_occupied)
-                            meat_active <= 1'b1;
+                        meat_active <= 1'b1;
                     end
 
                     // --- Step processing ---
@@ -446,13 +509,6 @@ module snake_7seg_graph_core (
                         if (dead) begin
                             state <= S_FINAL;
                         end else begin
-                            // Update direction
-                            direction <= next_direction;
-
-                            // TODO
-                            // Push new head into snake_body
-                            // Light new head segment
-                            // Be careful about the off-by-one error
                             snake_body[head_ptr] <= {next_digit, next_seg};
                             head_ptr <= head_ptr + 5'd1;
 
@@ -460,6 +516,7 @@ module snake_7seg_graph_core (
                             if (eating_meat) begin
                                 meat_active <= 1'b0;
                                 ate_meat    <= 1'b1;
+                                score       <= score + 5'd1;
                             end else begin
                                 tail_ptr <= tail_ptr + 5'd1;
                                 snake_body[tail_ptr] <= 5'b11111;
@@ -468,10 +525,30 @@ module snake_7seg_graph_core (
                     end
                 end 
 
-                S_FINAL:
+                S_FINAL: begin
+                    if (restart)
+                        state <= S_INITIAL;
+                end
                 default: state <= S_INITIAL;
             endcase
         end
     end
-    assign score = 0; // TODO
+
+    integer index_gg;
+    integer digit_index;
+    always_comb begin
+        DISPLAY[0] = 7'b1111111;
+        DISPLAY[1] = 7'b1111111;
+        DISPLAY[2] = 7'b1111111;
+        DISPLAY[3] = 7'b1111111;
+        for (index_gg = 0; index_gg < 32; index_gg = index_gg + 1) begin
+            for (digit_index = 0 ; digit_index < 4 ; digit_index = digit_index + 1) begin
+                if (index_gg < snake_length && 
+                    snake_body[(index_gg + tail_ptr) % 32][4:3] == digit_index) begin
+                        DISPLAY[digit_index] &= ~(7'b0000001 << (3'd6 - snake_body[(index_gg + tail_ptr) % 32][2:0]));
+                end
+            end
+        end
+    end
+
 endmodule
