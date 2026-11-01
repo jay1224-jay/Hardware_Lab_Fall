@@ -1,0 +1,76 @@
+[PASS ]  Case 3-3: write addr 3, data 14 | dout=0, cnt_valid=3
+[PASS ] Case 3-4: read addr 0, expect 10 | dout=10, cnt_valid=3
+[PASS ]  Case 3-5: read addr 1, expect 4 | dout=4, cnt_valid=3
+[PASS ] Case 3-6: read addr 3, expect 14 | dout=14, cnt_valid=3
+==== Case 3 Passed: Basic write/read ====
+[PASS ] ddr 1, cnt_valid should remain 3 | dout=0, cnt_valid=3
+[PASS ] ead overwritten addr 1, expect 9 | dout=9, cnt_valid=3
+==== Case 4 Passed: Overwrite valid entry ====
+[PASS ]  90, same mapped index as addr 3 | dout=0, cnt_valid=3
+[PASS ]  after writing addr 90, expect 6 | dout=6, cnt_valid=3
+[PASS ] Case 5-3: read addr 90, expect 6 | dout=6, cnt_valid=3
+==== Case 5 Passed: Address mapping collision ====
+[PASS ] t valid entry, same mapped index | dout=12, cnt_valid=3
+[PASS ] ead after write-first, expect 12 | dout=12, cnt_valid=3
+==== Case 6 Passed: Write-first valid entry ====
+[PASS ] ase 7-1: read addr 0 before idle | dout=10, cnt_valid=3
+[PASS ]  7-2: re=0, dout should become 0 | dout=0, cnt_valid=3
+==== Case 7 Passed: re=0 makes dout zero ====
+[PASS ] : make dout nonzero before reset | dout=12, cnt_valid=3
+[PASS ] zero dout should clear dout to 0 | dout=0, cnt_valid=0
+==== Case 8 Passed: Reset clears dout ====
+[PASS ] hen entry was previously invalid | dout=7, cnt_valid=1
+[PASS ]  entry after invalid write-first | dout=7, cnt_valid=1
+==== Case 9 Passed: Write-first invalid entry ====
+[PASS ] ead/write different mapped index | dout=7, cnt_valid=2
+[PASS ] ad newly written different index | dout=5, cnt_valid=2
+[PASS ] l read index should still hold 7 | dout=7, cnt_valid=2
+==== Case 10 Passed: Same cycle different mapped index ====
+[PASS ] e dout nonzero before write-only | dout=7, cnt_valid=2
+[PASS ] hould write but dout should be 0 | dout=0, cnt_valid=3
+[PASS ]  11-3: read back write-only data | dout=11, cnt_valid=3
+==== Case 11 Passed: Write-only dout behavior ====
+[ERROR] reset priority over active we/re
+        expected dout=0, cnt_valid=0
+        got      dout=15, cnt_valid=4
+[ERROR] y test, addr 5 should be invalid
+        expected dout=0, cnt_valid=0
+        got      dout=15, cnt_valid=4
+[ERROR] st, old addr 3 should be invalid
+        expected dout=0, cnt_valid=0
+        got      dout=0, cnt_valid=4
+==== Error in Case 12 ====
+[ERROR]          Case 13-1: fill index 0
+        expected dout=0, cnt_valid=1
+        got      dout=0, cnt_valid=5
+[ERROR]          Case 13-2: fill index 1
+        expected dout=0, cnt_valid=2
+        got      dout=0, cnt_valid=6
+[ERROR]          Case 13-3: fill index 2
+        expected dout=0, cnt_valid=3
+        got      dout=0, cnt_valid=7
+[ERROR]          Case 13-4: fill index 3
+        expected dout=0, cnt_valid=4
+        got      dout=0, cnt_valid=8
+[ERROR]          Case 13-5: fill index 4
+        expected dout=0, cnt_valid=5
+        got      dout=0, cnt_valid=9
+[ERROR]          Case 13-6: fill index 5
+        expected dout=0, cnt_valid=6
+        got      dout=0, cnt_valid=10
+[ERROR]          Case 13-7: fill index 6
+        expected dout=0, cnt_valid=7
+        got      dout=0, cnt_valid=11
+[ERROR]          Case 13-8: fill index 7
+        expected dout=0, cnt_valid=8
+        got      dout=0, cnt_valid=11
+[ERROR] d index, cnt_valid should stay 8
+        expected dout=0, cnt_valid=8
+        got      dout=0, cnt_valid=11
+[ERROR] ite should update mapped index 2
+        expected dout=15, cnt_valid=8
+        got      dout=15, cnt_valid=11
+==== Error in Case 13 ====
+========================================
+==== Simulation Failed, total errors = 13 ====
+========================================
