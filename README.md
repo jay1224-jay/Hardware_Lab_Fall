@@ -6,7 +6,8 @@
 |--------|-------|--|-|
 | Lab 2  | 96.5  | FPGA Implementation of Subset-Sum   | - |
 | Lab 3  |   | 7-segment Display   | - |
-| Lab 4  |   | Snake Game on 7seg Display   | - |
+| Lab 4  |   | Snake Game on 7-segment Display   | - |
+| Lab 5  |   | Digital Photo Fram and VGA Game   | - |
 
 ## Basic Lab
 
