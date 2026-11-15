@@ -8,7 +8,11 @@ set_property PACKAGE_PIN U18 [get_ports rst]
 set_property IOSTANDARD LVCMOS33 [get_ports rst]
 set_property PACKAGE_PIN T17 [get_ports rotate_cw]
 set_property IOSTANDARD LVCMOS33 [get_ports rotate_cw]
-set_property PACKAGE_PIN W19 [get_ports rotate_ccw]
+
+# set_property PACKAGE_PIN U17 [get_ports rotate_ccw]
+# set_property IOSTANDARD LVCMOS33 [get_ports rotate_ccw]
+# NOTE: W19 is not stable after debounce and one_pulse. Consider U17 as alternative
+set_property PACKAGE_PIN W19 [get_ports rotate_ccw] 
 set_property IOSTANDARD LVCMOS33 [get_ports rotate_ccw]
 
 ## Switches
